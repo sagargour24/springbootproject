@@ -1,0 +1,24 @@
+# Minimal requirements for VCF to Neo4j pipeline
+# Start with these core dependencies
+
+# VCF Processing
+cyvcf2==0.30.28
+pysam==0.22.0
+
+# Neo4j Database
+neo4j==5.14.0
+
+# Data Processing
+pandas==2.1.4
+numpy==1.26.2
+
+# API Framework
+fastapi==0.108.0
+uvicorn[standard]==0.25.0
+pydantic==2.5.2
+
+# HTTP
+requests==2.31.0
+
+# Configuration
+toml==0.10.2

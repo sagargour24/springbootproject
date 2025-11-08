@@ -1,0 +1,115 @@
+BASIC EXPLORATION -
+
+// View all node labels in the database
+CALL db.labels();
+
+// View all relationship types
+CALL db.relationshipTypes();
+
+// Count all nodes by type
+MATCH (n)
+RETURN labels(n)[0] AS NodeType, count(*) AS Count;
+
+// Count all relationships by type
+MATCH ()-[r]->()
+RETURN type(r) AS RelationshipType, count(*) AS Count;
+
+-----------------------------------------------------------------
+
+INSPECT DATA STRUCTURE -
+
+// View a few Variant nodes
+MATCH (v:Variant)
+RETURN v
+LIMIT 10;
+
+// View Phenotypes, Drugs, and Outcomes
+MATCH (p:Phenotype) RETURN p LIMIT 10;
+MATCH (d:Drug) RETURN d LIMIT 10;
+MATCH (o:Outcome) RETURN o LIMIT 10;
+
+// Check Variant → Phenotype → Drug → Outcome chains
+MATCH (v:Variant)-[:CAUSES]->(p:Phenotype)-[:TREATED_BY]->(d:Drug)-[:RESULTS_IN]->(o:Outcome)
+RETURN v.variant_id, p.name, d.name, o.prediction
+LIMIT 10;
+
+-----------------------------------------------------------------
+
+EXPLORE RELATIONSHIPS -
+
+// Show all relationship paths from Variant to Outcome
+MATCH (v:Variant)-[r*1..3]->(o:Outcome)
+RETURN v.variant_id, [rel IN r | type(rel)] AS Path, o.prediction
+LIMIT 10;
+
+// Show all Phenotypes treated by a specific drug
+MATCH (p:Phenotype)-[:TREATED_BY]->(d:Drug {name: "Metformin"})
+RETURN p.name, d.name;
+
+// Show all Variants that predict a "High impact" outcome
+MATCH (v:Variant)-[:PREDICTS]->(o:Outcome {prediction: "High impact"})
+RETURN v.variant_id, o.prediction
+LIMIT 10;
+
+-----------------------------------------------------------------
+
+DATA SUMMARY AND STATS -
+
+// Count of each node and relationship
+CALL db.schema.visualization();
+
+// Graph summary
+MATCH (v:Variant)
+WITH count(v) AS variants
+MATCH (p:Phenotype)
+WITH variants, count(p) AS phenotypes
+MATCH (d:Drug)
+WITH variants, phenotypes, count(d) AS drugs
+MATCH (o:Outcome)
+RETURN variants, phenotypes, drugs, count(o) AS outcomes;
+
+// Relationship summary
+MATCH ()-[r]->()
+RETURN type(r) AS RelationType, count(r) AS Count;
+
+-----------------------------------------------------------------
+
+VISUALIZATION AND PATH QUERIES -
+
+// Visualize a small portion of the graph
+MATCH (v:Variant)-[r]->(x)
+RETURN v, r, x
+LIMIT 25;
+
+// Show all relationships for a specific variant
+MATCH (v:Variant {variant_id: "22:16050075:A:G"})-[r]->(n)
+RETURN v, r, n;
+
+-----------------------------------------------------------------
+
+MAINTENENCE AND CLEANUP -
+
+// Delete everything (use carefully)
+MATCH (n)
+DETACH DELETE n;
+
+// Drop all indexes and constraints
+CALL apoc.schema.assert({}, {}, true);
+
+// Check existing indexes
+CALL db.indexes();
+
+// Compact the database (optional after heavy deletes)
+CALL dbms.checkpoint();
+
+-----------------------------------------------------------------
+
+PERFORMANCE CHECK -
+
+// Measure query performance
+PROFILE MATCH (v:Variant)-[:PREDICTS]->(o:Outcome)
+RETURN v.variant_id, o.prediction
+LIMIT 10;
+
+// Inspect database size
+CALL db.stats.retrieve('GRAPH COUNTS');

@@ -1,0 +1,18 @@
+# VCF to Neo4j Configuration File
+
+[neo4j]
+uri = "bolt://localhost:7687"
+username = "neo4j"
+password = "genegenius"
+
+[data]
+vcf_directory = "geneData"  # Data folder
+batch_size = 1000
+max_variants_per_chromosome = 5000  # Set to null or remove for unlimited
+
+[performance]
+target_query_latency_ms = 100
+min_graph_edges = 3000
+
+[clinical]
+use_mock_data = true  # Set to false when real ClinVar/PharmGKB data available
